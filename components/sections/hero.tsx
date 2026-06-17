@@ -35,6 +35,23 @@ export const Hero: React.FC = () => {
 
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [bgLoaded, setBgLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+    const checkMobile = () => {
+      setIsMobile(
+        window.innerWidth < 768 || 
+        "ontouchstart" in window || 
+        navigator.maxTouchPoints > 0
+      );
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const bgLoadedRef = useRef(false);
   useEffect(() => {
     bgLoadedRef.current = bgLoaded;
@@ -75,10 +92,11 @@ export const Hero: React.FC = () => {
 
   // Check if WebP background is already cached/complete on mount
   useEffect(() => {
+    if (isMobile) return;
     if (webpRef.current && webpRef.current.complete) {
       setBgLoaded(true);
     }
-  }, []);
+  }, [isMobile]);
 
   // Fade out fallback and fade in WebP smoothly once loaded
   useEffect(() => {
@@ -142,6 +160,12 @@ export const Hero: React.FC = () => {
 
   // Progressive Zoom frame preloading with off-thread decoding optimization
   useEffect(() => {
+    if (!hasMounted || isMobile) {
+      // Set progress to 100 on mobile to clear progress bars instantly
+      setLoadingProgress(100);
+      setCriticalReady(true);
+      return;
+    }
     let active = true;
     
     // Step 1: Preload keyframes first (every 8th frame) to render basic scroll structure quickly
@@ -304,6 +328,7 @@ export const Hero: React.FC = () => {
 
   // GSAP ScrollTrigger timeline configuration
   useEffect(() => {
+    if (!hasMounted || isMobile) return;
     const container = containerRef.current;
     const canvas = canvasRef.current;
     const entrance = entranceRef.current;
@@ -538,28 +563,30 @@ export const Hero: React.FC = () => {
 
       <div
         ref={containerRef}
-        className="relative h-[350vh] bg-dark-bg"
+        className="relative h-[100dvh] md:h-[350vh] bg-dark-bg"
       >
       {/* Sticky Viewport Container */}
       <div 
-        className="sticky top-0 h-screen w-full flex flex-col justify-between items-center overflow-hidden z-0"
+        className="relative md:sticky top-0 h-[100dvh] md:h-screen w-full flex flex-col justify-between items-center overflow-hidden z-0"
         style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
       >
         
         {/* Layer 2 (Beneath): Zoom Scrubber Canvas */}
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-          style={{ opacity: 0, zIndex: -20 }}
-        />
+        {!isMobile && (
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            style={{ opacity: 0, zIndex: -20 }}
+          />
+        )}
 
         {/* Layer 1 (On top): Looping WebP faded background image (outside entranceRef to prevent rotation) */}
         <img
           ref={webpRef}
-          src="/asset/GROC_landing_section.webp"
+          src={hasMounted && !isMobile ? "/asset/GROC_landing_section.webp" : undefined}
           alt="GROC Animated Hero Background"
           onLoad={() => setBgLoaded(true)}
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ease-out"
+          className="hidden md:block absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ease-out"
           style={{ opacity: bgLoaded && currentStateRef.current === 0 ? 0.4 : 0, zIndex: -10 }}
         />
 
@@ -569,7 +596,7 @@ export const Hero: React.FC = () => {
           src={`/asset/hero_zoom/${ZOOM_FRAMES[0]}`}
           alt="GROC Hero Fallback Background"
           className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ease-out"
-          style={{ opacity: bgLoaded ? 0 : 0.4, zIndex: -30 }}
+          style={{ opacity: bgLoaded && !isMobile ? 0 : 0.4, zIndex: -30 }}
         />
 
         {/* Ambient light pulse */}
@@ -686,7 +713,7 @@ export const Hero: React.FC = () => {
         </div>
 
         {/* Dynamic Scrubbing indicators */}
-        <div className="absolute bottom-8 left-6 right-6 flex justify-between items-end z-10 select-none pointer-events-none">
+        <div className="hidden md:flex absolute bottom-8 left-6 right-6 justify-between items-end z-10 select-none pointer-events-none">
           <div className="flex flex-col gap-1 font-mono text-[10px]">
             <span ref={progressTextRef} className="text-zinc-500 uppercase tracking-widest">
               Portal Zoom 0%
