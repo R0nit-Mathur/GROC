@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-display), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+
+  --color-brand-green: var(--brand-green);
+  --color-brand-glow: var(--brand-glow);
+  --color-dark-bg: #050807;
+  --color-card-bg: #0c120f;
+  --color-card-border: #17231c;
+
+  /* Environmental Theme Colors */
+  --color-env-primary: #050807;
+  --color-env-secondary: #0B1210;
+  --color-env-surface: #111A17;
+  --color-env-green: #4ADE80;
+  --color-env-forest: #1F5A3F;
+  --color-env-blue: #38BDF8;
+  --color-env-sky: #7DD3FC;
+  --color-env-gold: #D4AF37;
+  --color-env-text-primary: #F5F7F6;
+  --color-env-text-secondary: #B4C0BB;
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display), sans-serif;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+:root {
+  --background: #050807;
+  --foreground: #F5F7F6;
+  --brand-green: hsl(142.1 70.6% 45.3%);
+  --brand-glow: hsl(142.1 76.2% 75%);
+}
+
+:root[data-branch="dev-blue"] {
+  --brand-green: hsl(199 89% 48%);
+  --brand-glow: hsl(199 95% 75%);
+}
+
+:root[data-branch="canary-amber"] {
+  --brand-green: hsl(35 92% 50%);
+  --brand-glow: hsl(35 95% 75%);
+}
+
+:root[data-branch="experimental-purple"] {
+  --brand-green: hsl(271 91% 65%);
+  --brand-glow: hsl(271 95% 80%);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Lenis CSS integration */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* Custom Webkit scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
+}
