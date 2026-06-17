@@ -64,7 +64,7 @@ export const GrowthMorph: React.FC = () => {
           <div className="w-full max-w-4xl flex flex-col items-center text-center select-none px-4">
             
             <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-2xl font-sans drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-              Over 1,200 commits in public. Pipelines passing, servers routing requests, and logic fully running in production. Consistent daily repetition.
+              Verifiable proof-of-work. Over 1,200 commits in public, production-grade architectures deployed, and pipelines passing. A testament to developer consistency that makes talent discovery inevitable.
             </p>
 
             {/* Horizontal Specs Bar */}
@@ -136,7 +136,7 @@ export const GrowthMorph: React.FC = () => {
           <div className="w-full max-w-4xl flex flex-col items-center text-center select-none px-4">
             
             <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-2xl font-sans drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-              Curiosity without momentum. A repository initialized, a couple of empty directories, and ideas left uncompiled. Zero commits.
+              The entry point. Initializing a local repository, exploring dependencies, and formulating ideas. Every builder starts as an empty grid—curiosity waiting to be compiled into verified contribution.
             </p>
 
             {/* Horizontal Specs Bar */}

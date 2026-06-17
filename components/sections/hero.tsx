@@ -12,9 +12,9 @@ if (typeof window !== "undefined") {
 }
 
 const STAGES = [
-  { text: "Venture into the core of execution." },
-  { text: "Deconstruct theories into raw experiments." },
-  { text: "Pass through the portal of repetition." }
+  { text: "India's open source talent pipeline." },
+  { text: "Curators building communities, communities growing repositories." },
+  { text: "A sustainable ecosystem network compounding over time." }
 ];
 
 export const Hero: React.FC = () => {
@@ -565,7 +565,7 @@ export const Hero: React.FC = () => {
             </p>
 
             <p className="mt-3 text-xs md:text-sm text-zinc-300 leading-relaxed max-w-lg select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-              A cinematic playground for open-source builders. Ship daily, deconstruct complex systems, and share your proof in public.
+              India&apos;s open-source talent operating system. Ship production code daily, collaborate within curator-led communities, and get discovered by elite technology teams.
             </p>
 
             {/* Buttons */}

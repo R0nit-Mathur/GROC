@@ -49,7 +49,7 @@ const ACCOMPLISHMENTS = [
 
 export const ProofGrid: React.FC = () => {
   return (
-    <section className="relative py-28 md:py-36 px-6 bg-env-primary border-b border-[#162722] overflow-hidden flex flex-col items-center">
+    <section id="proof" className="relative py-28 md:py-36 px-6 bg-env-primary border-b border-[#162722] overflow-hidden flex flex-col items-center">
       {/* Visual lighting accents */}
       <div className="absolute bottom-0 right-0 w-[50vw] h-[50vw] max-w-[500px] bg-env-green/5 rounded-full blur-[120px] pointer-events-none -z-10" />
 

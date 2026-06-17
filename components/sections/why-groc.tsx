@@ -8,29 +8,29 @@ const PILLARS = [
   {
     icon: Terminal,
     title: "Build",
-    tagline: "Repetition breeds execution.",
+    tagline: "Curator-Led Architecture.",
     description:
-      "We believe writing code is a craft refined by hours of shipping. No theoretical lectures or trivia—just continuous cycles of building real products that handle actual requests.",
+      "Repositories are designed and curated by experienced engineering leaders. Contributors join real-world project codebases under high-standard guidance, avoiding isolated, low-signal bootcamps.",
   },
   {
     icon: Lightbulb,
     title: "Learn",
-    tagline: "Learn in the open.",
+    tagline: "Peer Curation & Review.",
     description:
-      "Synthesize concepts by explaining them. We document bugs publicly, do transparent pull requests, and review each other's system architectures so nobody builds in a silo.",
+      "Transition from contributor to curator. Review system architectures, merge public pull requests, document production outages publicly, and lead project modules to build peer authority.",
   },
   {
     icon: Compass,
     title: "Ship",
-    tagline: "Production is the source of truth.",
+    tagline: "Production as Proof.",
     description:
-      "An application doesn't exist until it's deployed to users. We optimize build compilation, setup CI/CD pipelines, audit performance metrics, and study production errors.",
+      "No empty resumes. Builders are discovered through verified commits, optimized performance indices, and compiled applications running live at scale, connecting directly with engineering teams.",
   },
 ];
 
 export const WhyGroc: React.FC = () => {
   return (
-    <section className="relative py-28 md:py-36 px-6 bg-[#F4F7F5] border-y border-[#D2DDD7] overflow-hidden flex flex-col items-center">
+    <section id="philosophy" className="relative py-28 md:py-36 px-6 bg-[#F4F7F5] border-y border-[#D2DDD7] overflow-hidden flex flex-col items-center">
       {/* Background Grid Accent adapted for light theme */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#E2EDE7_1px,transparent_1px),linear-gradient(to_bottom,#E2EDE7_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10 opacity-60" />
 

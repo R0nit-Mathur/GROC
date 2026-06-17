@@ -20,34 +20,34 @@ interface CommitNode {
 }
 
 const COMMITS_DATA: CommitNode[] = [
-  { id: 1, sha: "ef7102a", author: "Tariq", role: "SecOps", branch: "main", cx: 10, cy: 20, msg: "Initial repo setup with strict memory bounds", additions: 42, deletions: 0, status: "success", date: "2 mins ago" },
-  { id: 2, sha: "a91b24d", author: "Elena", role: "Core Contributor", branch: "dev", cx: 24, cy: 40, msg: "feat(core): initialize Next.js server runtime structure", additions: 154, deletions: 12, status: "success", date: "5 mins ago" },
-  { id: 3, sha: "cb782e1", author: "Kaelen", role: "LLVM Engineer", branch: "feature/compiler", cx: 36, cy: 60, msg: "feat(compiler): raw AST parser with token tokenizer", additions: 89, deletions: 4, status: "merged", date: "10 mins ago" },
-  { id: 4, sha: "8d904b1", author: "Chloe", role: "Design Systems", branch: "feature/compiler", cx: 46, cy: 60, msg: "feat(compiler): intermediate representation optimization", additions: 64, deletions: 15, status: "merged", date: "12 mins ago" },
-  { id: 5, sha: "c52e1f4", author: "Sophia", role: "Frontend Dev", branch: "dev", cx: 40, cy: 40, msg: "feat(webgl): canvas rendering viewport setup", additions: 112, deletions: 8, status: "success", date: "15 mins ago" },
-  { id: 6, sha: "e7f22a1", author: "Aravind", role: "Systems Architect", branch: "feature/ui-engine", cx: 52, cy: 80, msg: "perf(gl): multi-threaded buffer swapping interface", additions: 240, deletions: 18, status: "merged", date: "20 mins ago" },
-  { id: 7, sha: "9b8df32", author: "Sophia", role: "Frontend Dev", branch: "feature/ui-engine", cx: 62, cy: 80, msg: "feat(gl): shader compilation & fragment pipeline", additions: 95, deletions: 2, status: "merged", date: "22 mins ago" },
-  { id: 8, sha: "14be0c2", author: "Ji-Min", role: "ML Researcher", branch: "dev", cx: 68, cy: 40, msg: "merge(compiler): integrate compiler-ir optimizations into dev", additions: 350, deletions: 24, status: "success", date: "25 mins ago" },
-  { id: 9, sha: "3a4f89d", author: "Marcus", role: "Rust Developer", branch: "dev", cx: 78, cy: 40, msg: "merge(ui-engine): combine WebGL rendering layer into dev", additions: 420, deletions: 35, status: "success", date: "30 mins ago" },
-  { id: 10, sha: "7f21e8a", author: "Tariq", role: "SecOps", branch: "main", cx: 92, cy: 20, msg: "release(v1.0.0): deploy stable builder core to production", additions: 15, deletions: 2, status: "success", date: "32 mins ago" }
+  { id: 1, sha: "ef7102a", author: "Tariq", role: "Cohort Curator", branch: "main", cx: 10, cy: 20, msg: "curate: initial project scaffolding with test suites", additions: 42, deletions: 0, status: "success", date: "2 mins ago" },
+  { id: 2, sha: "a91b24d", author: "Elena", role: "Module Lead", branch: "dev", cx: 24, cy: 40, msg: "feat(core): setup concurrent packet buffer pool", additions: 154, deletions: 12, status: "success", date: "5 mins ago" },
+  { id: 3, sha: "cb782e1", author: "Kaelen", role: "Ecosystem Curator", branch: "feature/compiler", cx: 36, cy: 60, msg: "curate: approve AST parser module contributions", additions: 89, deletions: 4, status: "merged", date: "10 mins ago" },
+  { id: 4, sha: "8d904b1", author: "Chloe", role: "Lead Contributor", branch: "feature/compiler", cx: 46, cy: 60, msg: "feat(compiler): recursive AST compiler pass", additions: 64, deletions: 15, status: "merged", date: "12 mins ago" },
+  { id: 5, sha: "c52e1f4", author: "Sophia", role: "Active Builder", branch: "dev", cx: 40, cy: 40, msg: "feat(render): WebGL canvas layer interface", additions: 112, deletions: 8, status: "success", date: "15 mins ago" },
+  { id: 6, sha: "e7f22a1", author: "Aravind", role: "Technical Curator", branch: "feature/ui-engine", cx: 52, cy: 80, msg: "curate: approve multi-threaded lock-free queue", additions: 240, deletions: 18, status: "merged", date: "20 mins ago" },
+  { id: 7, sha: "9b8df32", author: "Sophia", role: "Active Builder", branch: "feature/ui-engine", cx: 62, cy: 80, msg: "feat(render): shader compilation pipeline", additions: 95, deletions: 2, status: "merged", date: "22 mins ago" },
+  { id: 8, sha: "14be0c2", author: "Ji-Min", role: "Project Contributor", branch: "dev", cx: 68, cy: 40, msg: "merge(core): integrate optimized memory buffers", additions: 350, deletions: 24, status: "success", date: "25 mins ago" },
+  { id: 9, sha: "3a4f89d", author: "Marcus", role: "Curator Lead", branch: "dev", cx: 78, cy: 40, msg: "curate: merge rendering pipeline for dev check", additions: 420, deletions: 35, status: "success", date: "30 mins ago" },
+  { id: 10, sha: "7f21e8a", author: "Tariq", role: "Cohort Curator", branch: "main", cx: 92, cy: 20, msg: "release(v1.0.0): deploy stable builder core to production", additions: 15, deletions: 2, status: "success", date: "32 mins ago" }
 ];
 
 const INITIAL_LOGS = [
-  "system: initializing local git repository listener...",
-  "git: listener active on branch [main] [dev] [feature/*]",
-  "* [main] sha ef7102a - Tariq: Initial repo setup (+42 -0)",
-  "* [dev] sha a91b24d - Elena: feat(core): initialize Next.js server runtime structure (+154 -12)",
-  "* [feature/compiler] sha cb782e1 - Kaelen: feat(compiler): raw AST parser with token tokenizer (+89 -4)"
+  "system: initializing repository curation agent listener...",
+  "groc: listener active on main, dev, feature/*",
+  "* [main] sha ef7102a - Tariq (Curator): setup project boundary limits (+42 -0)",
+  "* [dev] sha a91b24d - Elena (Contributor): feat(core): concurrent thread-safe queues (+154 -12)",
+  "* [feature/compiler] sha cb782e1 - Kaelen (Curator): curate: approve compiler tokenization specs (+89 -4)"
 ];
 
 const RANDOM_LOG_TEMPLATES = [
-  { author: "Kaelen", branch: "feature/compiler", msg: "refactor: simplify AST parsing nodes", add: 14, del: 3 },
-  { author: "Sophia", branch: "dev", msg: "style: adjust responsive canvas margins", add: 5, del: 1 },
-  { author: "Elena", branch: "dev", msg: "fix: client hydration warning in browser logs", add: 2, del: 2 },
-  { author: "Marcus", branch: "dev", msg: "perf(rust): avoid cloning buffers on thread swap", add: 58, del: 12 },
-  { author: "Chloe", branch: "feature/ui-engine", msg: "docs: update design tokens spec matrix", add: 12, del: 0 },
-  { author: "Tariq", branch: "main", msg: "security: patch package dependencies", add: 8, del: 1 },
-  { author: "Aravind", branch: "feature/compiler", msg: "test: compiler optimizer test coverage", add: 32, del: 6 }
+  { author: "Kaelen (Curator)", branch: "feature/compiler", msg: "curate: approve AST parser module contributions", add: 14, del: 3 },
+  { author: "Sophia (Builder)", branch: "dev", msg: "feat(render): WebGL canvas layer interface", add: 5, del: 1 },
+  { author: "Elena (Builder)", branch: "dev", msg: "fix(core): thread safety boundary validation check", add: 2, del: 2 },
+  { author: "Marcus (Curator)", branch: "dev", msg: "curate: merge compiler optimization pull requests", add: 58, del: 12 },
+  { author: "Chloe (Builder)", branch: "feature/ui-engine", msg: "feat(render): shader compilation pipeline", add: 12, del: 0 },
+  { author: "Tariq (Curator)", branch: "main", msg: "release(v1.0.2): tag stable module build on main", add: 8, del: 1 },
+  { author: "Aravind (Curator)", branch: "feature/compiler", msg: "curate: approve multi-threaded lock-free queue", add: 32, del: 6 }
 ];
 
 export const CommunityNetwork: React.FC = () => {
@@ -75,7 +75,7 @@ export const CommunityNetwork: React.FC = () => {
   }, []);
 
   return (
-    <section className="relative py-28 md:py-36 px-6 bg-env-secondary overflow-hidden flex flex-col items-center">
+    <section id="network" className="relative py-28 md:py-36 px-6 bg-env-secondary overflow-hidden flex flex-col items-center">
       {/* Subtle blue gradient connection glow overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.06)_0%,transparent_70%)] pointer-events-none" />
 
