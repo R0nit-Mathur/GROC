@@ -47,14 +47,14 @@ export const Hero: React.FC = () => {
 
   // Fullscreen loader overlay fade-out and scroll release logic
   useEffect(() => {
-    if (loadingProgress >= 100) {
+    if (loadingProgress >= 100 && bgLoaded) {
       setFadeLoader(true);
       const timer = setTimeout(() => {
         setShowLoader(false);
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [loadingProgress]);
+  }, [loadingProgress, bgLoaded]);
 
   useEffect(() => {
     if (showLoader) {
@@ -67,13 +67,25 @@ export const Hero: React.FC = () => {
     };
   }, [showLoader]);
 
-  // Preload looping WebP
+  // Preload looping WebP with safety timeout to prevent locking on slow connections
   useEffect(() => {
     const img = new Image();
     img.src = "/asset/GROC_landing_section.webp";
+    
+    const safetyTimeout = setTimeout(() => {
+      setBgLoaded(true);
+    }, 15000); // 15 seconds safety timeout
+
     img.onload = () => {
+      clearTimeout(safetyTimeout);
       setBgLoaded(true);
     };
+    img.onerror = () => {
+      clearTimeout(safetyTimeout);
+      setBgLoaded(true); // Fallback force load to let page display
+    };
+
+    return () => clearTimeout(safetyTimeout);
   }, []);
 
   // Entrance fade-in animation on mount when preloading completes
@@ -442,7 +454,7 @@ export const Hero: React.FC = () => {
       {/* Cinematic Fullscreen Preloader */}
       {showLoader && (
         <div
-          className={`fixed inset-0 w-full h-full bg-[#050807] flex flex-col justify-center items-center z-[9999] transition-opacity duration-700 ease-out pointer-events-auto select-none ${
+          className={`fixed inset-0 w-screen h-[100dvh] bg-[#050807] flex flex-col justify-center items-center z-[9999] transition-opacity duration-700 ease-out pointer-events-auto select-none ${
             fadeLoader ? "opacity-0" : "opacity-100"
           }`}
         >
@@ -468,17 +480,21 @@ export const Hero: React.FC = () => {
             <div className="w-full h-[2px] bg-zinc-950/80 rounded-full overflow-hidden mb-4 border border-[#111A17]">
               <div
                 className="h-full bg-brand-green transition-all duration-300 ease-out shadow-[0_0_8px_rgba(74,222,128,0.5)]"
-                style={{ width: `${loadingProgress}%` }}
+                style={{ width: `${!bgLoaded && loadingProgress >= 100 ? 99 : loadingProgress}%` }}
               />
             </div>
 
             {/* Detailed metric details */}
             <div className="flex justify-between items-center w-full text-[9px] text-zinc-500 font-medium">
               <span className="animate-pulse uppercase tracking-wider">
-                {loadingProgress < 100 ? "Preloading story assets..." : "Engine initialized"}
+                {!bgLoaded 
+                  ? "Loading portal backdrop..." 
+                  : loadingProgress < 100 
+                    ? "Preloading story assets..." 
+                    : "Engine initialized"}
               </span>
               <span className="font-bold text-brand-green">
-                {loadingProgress}%
+                {!bgLoaded && loadingProgress >= 100 ? 99 : loadingProgress}%
               </span>
             </div>
           </div>
