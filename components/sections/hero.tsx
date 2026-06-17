@@ -21,6 +21,7 @@ export const Hero: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const webpRef = useRef<HTMLImageElement>(null);
+  const fallbackRef = useRef<HTMLImageElement>(null);
   
   // Element refs for direct GSAP animation (bypassing React re-renders to prevent scroll lag)
   const entranceRef = useRef<HTMLDivElement>(null);
@@ -34,6 +35,10 @@ export const Hero: React.FC = () => {
 
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [bgLoaded, setBgLoaded] = useState(false);
+  const bgLoadedRef = useRef(false);
+  useEffect(() => {
+    bgLoadedRef.current = bgLoaded;
+  }, [bgLoaded]);
   const [showLoader, setShowLoader] = useState(false); // Bypassed fullscreen overlay
   const [fadeLoader, setFadeLoader] = useState(false);
   const [criticalReady, setCriticalReady] = useState(false);
@@ -68,26 +73,34 @@ export const Hero: React.FC = () => {
     };
   }, [showLoader]);
 
-  // Preload looping WebP with safety timeout to prevent locking on slow connections
+  // Check if WebP background is already cached/complete on mount
   useEffect(() => {
-    const img = new Image();
-    img.src = "/asset/GROC_landing_section.webp";
-    
-    const safetyTimeout = setTimeout(() => {
+    if (webpRef.current && webpRef.current.complete) {
       setBgLoaded(true);
-    }, 15000); // 15 seconds safety timeout
-
-    img.onload = () => {
-      clearTimeout(safetyTimeout);
-      setBgLoaded(true);
-    };
-    img.onerror = () => {
-      clearTimeout(safetyTimeout);
-      setBgLoaded(true); // Fallback force load to let page display
-    };
-
-    return () => clearTimeout(safetyTimeout);
+    }
   }, []);
+
+  // Fade out fallback and fade in WebP smoothly once loaded
+  useEffect(() => {
+    if (bgLoaded) {
+      if (fallbackRef.current) {
+        gsap.to(fallbackRef.current, {
+          opacity: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          overwrite: "auto"
+        });
+      }
+      if (webpRef.current && currentStateRef.current === 0) {
+        gsap.to(webpRef.current, {
+          opacity: 0.4,
+          duration: 0.8,
+          ease: "power2.out",
+          overwrite: "auto"
+        });
+      }
+    }
+  }, [bgLoaded]);
 
   // Entrance fade-in animation on mount when preloading completes
   useEffect(() => {
@@ -318,8 +331,11 @@ export const Hero: React.FC = () => {
       backfaceVisibility: "hidden"
     });
     gsap.set(canvas, { opacity: 0 });
+    if (fallbackRef.current) {
+      gsap.set(fallbackRef.current, { opacity: bgLoadedRef.current ? 0 : 0.4 });
+    }
     if (webpRef.current) {
-      gsap.set(webpRef.current, { opacity: 0.4 });
+      gsap.set(webpRef.current, { opacity: bgLoadedRef.current ? 0.4 : 0 });
     }
     
     frameObjRef.current.frame = 0;
@@ -354,9 +370,17 @@ export const Hero: React.FC = () => {
         overwrite: "auto"
       });
       
+      if (fallbackRef.current) {
+        gsap.to(fallbackRef.current, {
+          opacity: targetState === 0 && !bgLoadedRef.current ? 0.4 : 0,
+          duration: 0.4,
+          overwrite: "auto"
+        });
+      }
+      
       if (webpRef.current) {
         gsap.to(webpRef.current, {
-          opacity: targetState === 0 ? 0.4 : 0,
+          opacity: targetState === 0 && bgLoadedRef.current ? 0.4 : 0,
           duration: 0.4,
           overwrite: "auto"
         });
@@ -438,7 +462,7 @@ export const Hero: React.FC = () => {
     return () => {
       st.kill();
     };
-  }, [bgLoaded]);
+  }, []);
 
   const scrollToNext = () => {
     if (containerRef.current) {
@@ -518,27 +542,35 @@ export const Hero: React.FC = () => {
       >
       {/* Sticky Viewport Container */}
       <div 
-        className="sticky top-0 h-screen w-full flex flex-col justify-between items-center overflow-hidden"
+        className="sticky top-0 h-screen w-full flex flex-col justify-between items-center overflow-hidden z-0"
         style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
       >
         
         {/* Layer 2 (Beneath): Zoom Scrubber Canvas */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none -z-20"
-          style={{ opacity: 0 }}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          style={{ opacity: 0, zIndex: -20 }}
         />
 
         {/* Layer 1 (On top): Looping WebP faded background image (outside entranceRef to prevent rotation) */}
-        {bgLoaded && (
-          <img
-            ref={webpRef}
-            src="/asset/GROC_landing_section.webp"
-            alt="GROC Animated Hero Background"
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none -z-10"
-            style={{ opacity: 0.4 }}
-          />
-        )}
+        <img
+          ref={webpRef}
+          src="/asset/GROC_landing_section.webp"
+          alt="GROC Animated Hero Background"
+          onLoad={() => setBgLoaded(true)}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ease-out"
+          style={{ opacity: bgLoaded && currentStateRef.current === 0 ? 0.4 : 0, zIndex: -10 }}
+        />
+
+        {/* Lightweight static fallback image rendered immediately under the WebP image to prevent black screen on load */}
+        <img
+          ref={fallbackRef}
+          src={`/asset/hero_zoom/${ZOOM_FRAMES[0]}`}
+          alt="GROC Hero Fallback Background"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ease-out"
+          style={{ opacity: bgLoaded ? 0 : 0.4, zIndex: -30 }}
+        />
 
         {/* Ambient light pulse */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85vw] h-[45vw] max-w-[900px] bg-brand-green/5 rounded-full blur-[140px] pointer-events-none -z-10 animate-pulse-slow" />
