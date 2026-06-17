@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { useScroll, useMotionValueEvent } from "framer-motion";
+import React, { useRef } from "react";
+import { useScroll, useTransform, motion } from "framer-motion";
 import { Terminal } from "lucide-react";
 
 const COLUMNS = 53;
@@ -139,16 +139,21 @@ const ContributionGraphCard: React.FC<ContributionGraphCardProps> = ({ active, c
 
 export const GrowthMorph: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0); // 0 to 1
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
-  useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    setScrollProgress(latest);
-  });
+  // Transform scroll progress directly to clip-path polygon to avoid React re-renders on scroll
+  const clipPathValue = useTransform(
+    scrollYProgress,
+    [0, 1],
+    [
+      "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+      "polygon(0 0, 100% 0, 100% 0%, 0 0%)"
+    ]
+  );
 
   return (
     <div
@@ -222,10 +227,10 @@ export const GrowthMorph: React.FC = () => {
         </div>
 
         {/* ----------------- L1 LAYER (Top / Cropped) ----------------- */}
-        <div 
+        <motion.div 
           className="absolute inset-0 w-full h-full flex flex-col justify-between items-center py-16 px-6 bg-dark-bg z-10"
           style={{
-            clipPath: `polygon(0 0, 100% 0, 100% ${100 - scrollProgress * 100}%, 0 ${100 - scrollProgress * 100}%)`,
+            clipPath: clipPathValue,
           }}
         >
           
@@ -285,7 +290,7 @@ export const GrowthMorph: React.FC = () => {
 
           </div>
 
-        </div>
+        </motion.div>
 
       </div>
     </div>

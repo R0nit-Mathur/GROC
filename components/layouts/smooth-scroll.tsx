@@ -22,6 +22,14 @@ export const SmoothScroll: React.FC<SmoothScrollProps> = ({ children }) => {
       return;
     }
 
+    // Disable smooth scrolling on mobile viewports or touch devices for native performance
+    const isMobile = window.innerWidth < 768 || 
+                     ("ontouchstart" in window) || 
+                     (navigator.maxTouchPoints > 0);
+    if (isMobile) {
+      return;
+    }
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Custom premium easing

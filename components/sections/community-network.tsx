@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Code, GitBranch, Terminal, CheckCircle2, User, GitPullRequest, Eye } from "lucide-react";
+import { useInView } from "framer-motion";
 import { FadeIn } from "../motion/motion-primitives";
 
 interface CommitNode {
@@ -54,6 +55,10 @@ export const CommunityNetwork: React.FC = () => {
   const [hoveredCommit, setHoveredCommit] = useState<CommitNode | null>(null);
   const [logs, setLogs] = useState<string[]>(INITIAL_LOGS);
   const terminalContainerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Track if section is in viewport to suspend expensive SVG animations
+  const isGraphInView = useInView(containerRef, { once: false, margin: "-10% 0px" });
 
   // Auto-scroll terminal container directly (fixes viewport scroll hijacking)
   useEffect(() => {
@@ -75,7 +80,7 @@ export const CommunityNetwork: React.FC = () => {
   }, []);
 
   return (
-    <section id="network" className="relative py-28 md:py-36 px-6 bg-env-secondary overflow-hidden flex flex-col items-center">
+    <section ref={containerRef} id="network" className="relative py-28 md:py-36 px-6 bg-env-secondary overflow-hidden flex flex-col items-center">
       {/* Subtle blue gradient connection glow overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.06)_0%,transparent_70%)] pointer-events-none" />
 
@@ -163,26 +168,30 @@ export const CommunityNetwork: React.FC = () => {
                     className="opacity-60"
                   />
 
-                  {/* Animated commit packets flowing along branches */}
-                  {/* Main branch packet */}
-                  <circle r="1.5" fill="var(--brand-green)" className="shadow-[0_0_8px_var(--brand-green)]">
-                    <animateMotion dur="7s" repeatCount="indefinite" path="M 5,20 L 95,20" />
-                  </circle>
+                  {/* Animated commit packets flowing along branches - rendered only when visible in viewport */}
+                  {isGraphInView && (
+                    <>
+                      {/* Main branch packet */}
+                      <circle r="1.5" fill="var(--brand-green)">
+                        <animateMotion dur="7s" repeatCount="indefinite" path="M 5,20 L 95,20" />
+                      </circle>
 
-                  {/* Dev branch packet */}
-                  <circle r="1.5" fill="#3b82f6" className="shadow-[0_0_8px_#3b82f6]">
-                    <animateMotion dur="9s" repeatCount="indefinite" path="M 15,20 C 18,20 18,40 23,40 L 82,40 C 85,40 85,20 88,20" />
-                  </circle>
+                      {/* Dev branch packet */}
+                      <circle r="1.5" fill="#3b82f6">
+                        <animateMotion dur="9s" repeatCount="indefinite" path="M 15,20 C 18,20 18,40 23,40 L 82,40 C 85,40 85,20 88,20" />
+                      </circle>
 
-                  {/* Compiler branch packet */}
-                  <circle r="1.25" fill="#f59e0b" className="shadow-[0_0_8px_#f59e0b]">
-                    <animateMotion dur="6s" repeatCount="indefinite" path="M 30,40 C 32,40 32,60 35,60 L 58,60 C 61,60 61,40 64,40" />
-                  </circle>
-                  
-                  {/* UI branch packet */}
-                  <circle r="1.25" fill="#a855f7" className="shadow-[0_0_8px_#a855f7]">
-                    <animateMotion dur="8s" repeatCount="indefinite" path="M 45,40 C 47,40 47,80 50,80 L 72,80 C 74,80 74,40 76,40" />
-                  </circle>
+                      {/* Compiler branch packet */}
+                      <circle r="1.25" fill="#f59e0b">
+                        <animateMotion dur="6s" repeatCount="indefinite" path="M 30,40 C 32,40 32,60 35,60 L 58,60 C 61,60 61,40 64,40" />
+                      </circle>
+                      
+                      {/* UI branch packet */}
+                      <circle r="1.25" fill="#a855f7">
+                        <animateMotion dur="8s" repeatCount="indefinite" path="M 45,40 C 47,40 47,80 50,80 L 72,80 C 74,80 74,40 76,40" />
+                      </circle>
+                    </>
+                  )}
                 </svg>
 
                 {/* Branch Name Labels */}

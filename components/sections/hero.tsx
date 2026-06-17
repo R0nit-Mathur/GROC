@@ -34,8 +34,9 @@ export const Hero: React.FC = () => {
 
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [bgLoaded, setBgLoaded] = useState(false);
-  const [showLoader, setShowLoader] = useState(true);
+  const [showLoader, setShowLoader] = useState(false); // Bypassed fullscreen overlay
   const [fadeLoader, setFadeLoader] = useState(false);
+  const [criticalReady, setCriticalReady] = useState(false);
 
   const loadedImagesRef = useRef<{ [key: number]: HTMLImageElement }>({});
   const totalFrames = ZOOM_FRAMES.length;
@@ -47,14 +48,14 @@ export const Hero: React.FC = () => {
 
   // Fullscreen loader overlay fade-out and scroll release logic
   useEffect(() => {
-    if (loadingProgress >= 100 && bgLoaded) {
+    if (criticalReady && bgLoaded) {
       setFadeLoader(true);
       const timer = setTimeout(() => {
         setShowLoader(false);
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [loadingProgress, bgLoaded]);
+  }, [criticalReady, bgLoaded]);
 
   useEffect(() => {
     if (showLoader) {
@@ -194,6 +195,7 @@ export const Hero: React.FC = () => {
 
       Promise.all(keyframePromises).then(() => {
         if (!active) return;
+        setCriticalReady(true);
         
         // Step 2: Load the rest in the background
         for (let i = 0; i < totalFrames; i++) {
@@ -242,7 +244,8 @@ export const Hero: React.FC = () => {
         return loadedImagesRef.current[idx];
       }
       let step = 1;
-      while (step < totalFrames) {
+      const maxSteps = Math.min(24, totalFrames);
+      while (step < maxSteps) {
         if (idx - step >= 0 && loadedImagesRef.current[idx - step]) {
           return loadedImagesRef.current[idx - step];
         }
@@ -251,7 +254,7 @@ export const Hero: React.FC = () => {
         }
         step++;
       }
-      return null;
+      return loadedImagesRef.current[0] || null;
     };
 
     const img = getBestAvailableImage(index);
@@ -451,6 +454,14 @@ export const Hero: React.FC = () => {
 
   return (
     <>
+      {/* Subtle non-blocking YouTube/GitHub-style top progress bar */}
+      {loadingProgress < 100 && (
+        <div 
+          className="fixed top-0 left-0 h-[2.5px] bg-brand-green z-[9999] shadow-[0_0_10px_var(--color-brand-glow)] transition-all duration-300 ease-out"
+          style={{ width: `${loadingProgress}%` }}
+        />
+      )}
+
       {/* Cinematic Fullscreen Preloader */}
       {showLoader && (
         <div
