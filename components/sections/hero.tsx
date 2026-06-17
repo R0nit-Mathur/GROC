@@ -34,6 +34,8 @@ export const Hero: React.FC = () => {
 
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [bgLoaded, setBgLoaded] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
+  const [fadeLoader, setFadeLoader] = useState(false);
 
   const loadedImagesRef = useRef<{ [key: number]: HTMLImageElement }>({});
   const totalFrames = ZOOM_FRAMES.length;
@@ -42,6 +44,28 @@ export const Hero: React.FC = () => {
   // State refs to track canvas zoom state without triggering React re-renders
   const frameObjRef = useRef({ frame: 0 });
   const currentStateRef = useRef<number>(0);
+
+  // Fullscreen loader overlay fade-out and scroll release logic
+  useEffect(() => {
+    if (loadingProgress >= 100) {
+      setFadeLoader(true);
+      const timer = setTimeout(() => {
+        setShowLoader(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [loadingProgress]);
+
+  useEffect(() => {
+    if (showLoader) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showLoader]);
 
   // Preload looping WebP
   useEffect(() => {
@@ -52,16 +76,16 @@ export const Hero: React.FC = () => {
     };
   }, []);
 
-  // Entrance fade-in animation on mount when landing WebP is loaded
+  // Entrance fade-in animation on mount when preloading completes
   useEffect(() => {
-    if (bgLoaded && entranceRef.current) {
+    if (!showLoader && entranceRef.current) {
       gsap.to(entranceRef.current, {
         opacity: 1,
         duration: 1.5,
         ease: "power2.out"
       });
     }
-  }, [bgLoaded]);
+  }, [showLoader]);
 
   // Handle Canvas Resizing (Optimized: runs only on resize events)
   useEffect(() => {
@@ -147,7 +171,12 @@ export const Hero: React.FC = () => {
               resolve();
             });
           };
-          img.onerror = () => resolve();
+          img.onerror = () => {
+            if (active) {
+              updateProgress();
+            }
+            resolve();
+          };
         });
       });
 
@@ -172,6 +201,11 @@ export const Hero: React.FC = () => {
                 updateProgress();
               }
             });
+          };
+          img.onerror = () => {
+            if (active) {
+              updateProgress();
+            }
           };
         }
       });
@@ -404,10 +438,57 @@ export const Hero: React.FC = () => {
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="relative h-[350vh] bg-dark-bg"
-    >
+    <>
+      {/* Cinematic Fullscreen Preloader */}
+      {showLoader && (
+        <div
+          className={`fixed inset-0 w-full h-full bg-[#050807] flex flex-col justify-center items-center z-[9999] transition-opacity duration-700 ease-out pointer-events-auto select-none ${
+            fadeLoader ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          {/* Subtle forest pulse glow overlay */}
+          <div className="absolute w-[70vw] h-[70vw] max-w-[600px] bg-brand-green/5 rounded-full blur-[140px] animate-pulse-slow" />
+
+          {/* Loader text/bar box */}
+          <div className="z-10 flex flex-col items-center max-w-sm w-full px-8 text-center font-mono">
+            {/* Pulsing logo token */}
+            <div className="w-12 h-12 rounded-xl bg-brand-green flex justify-center items-center font-bold text-black text-lg shadow-[0_0_35px_rgba(74,222,128,0.3)] mb-6 animate-pulse">
+              G
+            </div>
+
+            {/* Display status */}
+            <h2 className="text-sm font-bold text-white uppercase tracking-[0.3em] mb-1.5">
+              INITIALIZING PORTAL
+            </h2>
+            <p className="text-[9px] text-[#4F625A] uppercase tracking-widest mb-8">
+              System // Greater Repetition of Craft
+            </p>
+
+            {/* Premium Progress Bar */}
+            <div className="w-full h-[2px] bg-zinc-950/80 rounded-full overflow-hidden mb-4 border border-[#111A17]">
+              <div
+                className="h-full bg-brand-green transition-all duration-300 ease-out shadow-[0_0_8px_rgba(74,222,128,0.5)]"
+                style={{ width: `${loadingProgress}%` }}
+              />
+            </div>
+
+            {/* Detailed metric details */}
+            <div className="flex justify-between items-center w-full text-[9px] text-zinc-500 font-medium">
+              <span className="animate-pulse uppercase tracking-wider">
+                {loadingProgress < 100 ? "Preloading story assets..." : "Engine initialized"}
+              </span>
+              <span className="font-bold text-brand-green">
+                {loadingProgress}%
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div
+        ref={containerRef}
+        className="relative h-[350vh] bg-dark-bg"
+      >
       {/* Sticky Viewport Container */}
       <div 
         className="sticky top-0 h-screen w-full flex flex-col justify-between items-center overflow-hidden"
@@ -574,5 +655,6 @@ export const Hero: React.FC = () => {
 
       </div>
     </div>
+    </>
   );
 };
