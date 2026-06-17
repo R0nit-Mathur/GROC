@@ -47,7 +47,7 @@ export const Navbar: React.FC = () => {
           </a>
 
           {/* Git Branch Switcher Dropdown */}
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-800 bg-card-bg/80 text-[11px] font-mono text-zinc-300 hover:text-white hover:border-zinc-700 transition-all duration-200"
@@ -95,7 +95,7 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Action Button */}
-        <div className="flex items-center">
+        <div className="hidden sm:flex items-center">
           <a
             href="#join"
             className="group relative flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-xs font-semibold text-white transition-all duration-300 hover:border-brand-green/50 hover:bg-brand-green/10"
