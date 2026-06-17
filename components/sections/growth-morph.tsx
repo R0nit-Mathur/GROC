@@ -1,8 +1,141 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import Image from "next/image";
 import { useScroll, useMotionValueEvent } from "framer-motion";
+import { Terminal } from "lucide-react";
+
+const COLUMNS = 53;
+const ROWS = 7;
+const CELL_SIZE = 18;
+const GAP = 4;
+const STEP = CELL_SIZE + GAP; // 22
+
+// Generate deterministic level arrays to avoid recalculating on every render
+const generateGridData = (active: boolean) => {
+  const cells = [];
+  for (let c = 0; c < COLUMNS; c++) {
+    for (let r = 0; r < ROWS; r++) {
+      const index = c * ROWS + r;
+      let level = 0;
+      
+      if (active) {
+        // Active Day 365 pattern: groups/sprints of high activity
+        const isSprintPeriod = 
+          (c >= 4 && c <= 9) || 
+          (c >= 14 && c <= 21) || 
+          (c >= 28 && c <= 36) || 
+          (c >= 42 && c <= 49);
+        
+        if (isSprintPeriod) {
+          const score = (index * 17) % 100;
+          if (score < 15) level = 0;
+          else if (score < 40) level = 1;
+          else if (score < 70) level = 2;
+          else if (score < 90) level = 3;
+          else level = 4;
+        } else {
+          const score = (index * 23) % 100;
+          if (score < 60) level = 0;
+          else if (score < 80) level = 1;
+          else level = 2;
+        }
+      } else {
+        // Day 01 - empty canvas with just 3 minor early commits (initialization phase)
+        if (index === 15 || index === 84 || index === 210) {
+          level = 1;
+        }
+      }
+
+      cells.push({
+        x: c * STEP,
+        y: r * STEP,
+        level,
+      });
+    }
+  }
+  return cells;
+};
+
+const L1_CELLS = generateGridData(false);
+const L2_CELLS = generateGridData(true);
+
+interface ContributionGraphCardProps {
+  active: boolean;
+  cells: typeof L1_CELLS;
+}
+
+const ContributionGraphCard: React.FC<ContributionGraphCardProps> = ({ active, cells }) => {
+  return (
+    <div className="w-full max-w-5xl px-8 py-6 rounded-2xl border border-[#17231c]/60 bg-[#0c120f]/50 backdrop-blur-md flex flex-col gap-4 shadow-[0_4px_30px_rgba(0,0,0,0.8)] my-8">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-[#17231c]/50 pb-2.5 text-zinc-500 font-mono text-[9px] md:text-[10px] select-none">
+        <span className="flex items-center gap-1.5 uppercase font-bold text-zinc-400">
+          <Terminal className="w-3.5 h-3.5 text-brand-green" />
+          groc-pipeline // contribution-graph
+        </span>
+        <span className={active ? "text-brand-green font-bold animate-pulse" : "text-zinc-600"}>
+          {active ? "STATUS: SHIPPED" : "STATUS: UNCOMPILED"}
+        </span>
+      </div>
+      
+      {/* SVG grid */}
+      <div className="w-full overflow-x-auto py-1 scrollbar-none">
+        <svg 
+          viewBox={`0 0 ${COLUMNS * STEP - GAP} ${ROWS * STEP - GAP}`} // 0 0 1162 150
+          className="w-full h-auto text-zinc-900"
+          style={{ minWidth: "750px" }}
+        >
+          {cells.map((cell, idx) => {
+            let fill = "#111815";
+            let opacity = 0.8;
+            
+            if (cell.level === 1) {
+              fill = "var(--brand-green)";
+              opacity = 0.15;
+            } else if (cell.level === 2) {
+              fill = "var(--brand-green)";
+              opacity = 0.40;
+            } else if (cell.level === 3) {
+              fill = "var(--brand-green)";
+              opacity = 0.70;
+            } else if (cell.level === 4) {
+              fill = "var(--brand-green)";
+              opacity = 1.0;
+            }
+
+            return (
+              <rect
+                key={idx}
+                x={cell.x}
+                y={cell.y}
+                width={CELL_SIZE}
+                height={CELL_SIZE}
+                rx="3"
+                ry="3"
+                style={{ fill, fillOpacity: opacity }}
+                className="transition-all duration-300 hover:scale-[1.08] transform origin-center"
+              />
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Legend */}
+      <div className="flex justify-between items-center font-mono text-[8px] md:text-[9px] text-zinc-600 select-none">
+        <span>VERIFIABLE COMMITS METRIC</span>
+        <div className="flex items-center gap-1.5">
+          <span>Less</span>
+          <div className="w-2.5 h-2.5 rounded-[2px]" style={{ backgroundColor: "#111815", opacity: 0.8 }} />
+          <div className="w-2.5 h-2.5 rounded-[2px]" style={{ backgroundColor: "var(--brand-green)", opacity: 0.15 }} />
+          <div className="w-2.5 h-2.5 rounded-[2px]" style={{ backgroundColor: "var(--brand-green)", opacity: 0.4 }} />
+          <div className="w-2.5 h-2.5 rounded-[2px]" style={{ backgroundColor: "var(--brand-green)", opacity: 0.7 }} />
+          <div className="w-2.5 h-2.5 rounded-[2px]" style={{ backgroundColor: "var(--brand-green)", opacity: 1.0 }} />
+          <span>More</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const GrowthMorph: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -28,15 +161,6 @@ export const GrowthMorph: React.FC = () => {
         {/* ----------------- L2 LAYER (Base / Background) ----------------- */}
         <div className="absolute inset-0 w-full h-full flex flex-col justify-between items-center py-16 px-6 bg-dark-bg z-0">
           
-          {/* L2 Background Image (Fullscreen, original, no filters) */}
-          <Image
-            src="/asset/GitHub_contribution_l2.jpeg"
-            alt="Github Contribution Stage 2"
-            fill
-            className="object-cover -z-10"
-            priority
-          />
-
           {/* L2 Top Content */}
           <div className="w-full max-w-4xl flex flex-col items-center text-center select-none px-4">
             
@@ -59,6 +183,9 @@ export const GrowthMorph: React.FC = () => {
             </h3>
 
           </div>
+
+          {/* New Coded GitHub Graph Card (Active) */}
+          <ContributionGraphCard active={true} cells={L2_CELLS} />
 
           {/* L2 Bottom Content */}
           <div className="w-full max-w-4xl flex flex-col items-center text-center select-none px-4">
@@ -102,15 +229,6 @@ export const GrowthMorph: React.FC = () => {
           }}
         >
           
-          {/* L1 Background Image (Fullscreen, original, no filters) */}
-          <Image
-            src="/asset/GitHub_contribution_l1.jpeg"
-            alt="Github Contribution Stage 1"
-            fill
-            className="object-cover -z-10"
-            priority
-          />
-
           {/* L1 Top Content */}
           <div className="w-full max-w-4xl flex flex-col items-center text-center select-none px-4">
             
@@ -131,6 +249,9 @@ export const GrowthMorph: React.FC = () => {
             </h3>
 
           </div>
+
+          {/* New Coded GitHub Graph Card (Sparse/Day 01) */}
+          <ContributionGraphCard active={false} cells={L1_CELLS} />
 
           {/* L1 Bottom Content */}
           <div className="w-full max-w-4xl flex flex-col items-center text-center select-none px-4">
