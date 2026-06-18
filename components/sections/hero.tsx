@@ -92,11 +92,10 @@ export const Hero: React.FC = () => {
 
   // Check if WebP background is already cached/complete on mount
   useEffect(() => {
-    if (isMobile) return;
     if (webpRef.current && webpRef.current.complete) {
       setBgLoaded(true);
     }
-  }, [isMobile]);
+  }, []);
 
   // Fade out fallback and fade in WebP smoothly once loaded
   useEffect(() => {
@@ -131,11 +130,20 @@ export const Hero: React.FC = () => {
     }
   }, [showLoader]);
 
-  // Handle Canvas Resizing (Optimized: runs only on resize events)
+  // Handle Canvas Resizing (Optimized: runs only on actual width changes)
   useEffect(() => {
+    let lastWidth = typeof window !== "undefined" ? window.innerWidth : 0;
+    
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
+      
+      const currentWidth = window.innerWidth;
+      if (lastDrawnFrameRef.current !== -1 && currentWidth === lastWidth) {
+        return;
+      }
+      lastWidth = currentWidth;
+      
       const rect = canvas.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       
@@ -148,43 +156,63 @@ export const Hero: React.FC = () => {
         ctx.scale(dpr, dpr);
       }
       lastDrawnFrameRef.current = -1; // Force redraw
+      drawFrame(Math.round(frameObjRef.current.frame));
     };
 
-    window.addEventListener("resize", handleResize);
+    const handleWidthResize = () => {
+      if (window.innerWidth === lastWidth) return;
+      handleResize();
+    };
+
+    window.addEventListener("resize", handleWidthResize);
     handleResize();
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", handleWidthResize);
     };
   }, []);
 
   // Progressive Zoom frame preloading with off-thread decoding optimization
   useEffect(() => {
-    if (!hasMounted || isMobile) {
-      // Set progress to 100 on mobile to clear progress bars instantly
-      setLoadingProgress(100);
-      setCriticalReady(true);
-      return;
-    }
+    if (!hasMounted) return;
     let active = true;
     
-    // Step 1: Preload keyframes first (every 8th frame) to render basic scroll structure quickly
+    const step = isMobile ? 4 : 1;
+    
+    // Calculate total frames we will load
+    const indicesToLoad: number[] = [];
+    indicesToLoad.push(0);
+    
+    // Add keyframes first (every 8th frame)
     const keyframeIndices: number[] = [];
     for (let i = 0; i < totalFrames; i += 8) {
       keyframeIndices.push(i);
+      if (!indicesToLoad.includes(i)) {
+        indicesToLoad.push(i);
+      }
     }
-    if (!keyframeIndices.includes(totalFrames - 1)) {
-      keyframeIndices.push(totalFrames - 1);
+    
+    // Add rest of the frames based on step
+    for (let i = 0; i < totalFrames; i += step) {
+      if (!indicesToLoad.includes(i)) {
+        indicesToLoad.push(i);
+      }
     }
-
+    
+    // Make sure the last frame is included
+    if (!indicesToLoad.includes(totalFrames - 1)) {
+      indicesToLoad.push(totalFrames - 1);
+    }
+    
+    const totalToLoad = indicesToLoad.length;
     let loadedCount = 0;
     const updateProgress = () => {
       if (!active) return;
       loadedCount++;
-      setLoadingProgress(Math.floor((loadedCount / totalFrames) * 100));
+      setLoadingProgress(Math.floor((loadedCount / totalToLoad) * 100));
     };
 
-    // Make sure frame 0 is loaded first and drawn immediately to prevent blank flashes
+    // Load frame 0 first and draw immediately
     const img0 = new Image();
     img0.src = `/asset/hero_zoom/${ZOOM_FRAMES[0]}`;
     img0.onload = () => {
@@ -200,7 +228,7 @@ export const Hero: React.FC = () => {
         drawFrame(0);
       });
 
-      // Load remaining keyframes
+      // Load remaining keyframes that are in indicesToLoad
       const keyframePromises = keyframeIndices.map((index) => {
         if (index === 0) return Promise.resolve();
         return new Promise<void>((resolve) => {
@@ -234,21 +262,21 @@ export const Hero: React.FC = () => {
         if (!active) return;
         setCriticalReady(true);
         
-        // Step 2: Load the rest in the background
-        for (let i = 0; i < totalFrames; i++) {
-          if (loadedImagesRef.current[i]) continue;
+        // Step 2: Load the rest of indicesToLoad in the background
+        indicesToLoad.forEach((index) => {
+          if (loadedImagesRef.current[index]) return;
 
           const img = new Image();
-          img.src = `/asset/hero_zoom/${ZOOM_FRAMES[i]}`;
+          img.src = `/asset/hero_zoom/${ZOOM_FRAMES[index]}`;
           img.onload = () => {
             img.decode().then(() => {
               if (active) {
-                loadedImagesRef.current[i] = img;
+                loadedImagesRef.current[index] = img;
                 updateProgress();
               }
             }).catch(() => {
               if (active) {
-                loadedImagesRef.current[i] = img;
+                loadedImagesRef.current[index] = img;
                 updateProgress();
               }
             });
@@ -258,14 +286,14 @@ export const Hero: React.FC = () => {
               updateProgress();
             }
           };
-        }
+        });
       });
     };
 
     return () => {
       active = false;
     };
-  }, [totalFrames]);
+  }, [totalFrames, hasMounted, isMobile]);
 
   // Frame drawing helper
   const drawFrame = (index: number) => {
@@ -328,7 +356,7 @@ export const Hero: React.FC = () => {
 
   // GSAP ScrollTrigger timeline configuration
   useEffect(() => {
-    if (!hasMounted || isMobile) return;
+    if (!hasMounted) return;
     const container = containerRef.current;
     const canvas = canvasRef.current;
     const entrance = entranceRef.current;
@@ -367,7 +395,45 @@ export const Hero: React.FC = () => {
     currentStateRef.current = 0;
     drawFrame(0);
 
-    // Dynamic state transition player to handle lag-free zoom snaps
+    const animateTexts = (targetState: number) => {
+      const elements = [entrance, stage1, stage2, stage3];
+      elements.forEach((el, i) => {
+        if (!el) return;
+        if (i === targetState) {
+          gsap.to(el, {
+            rotationX: 0,
+            y: 0,
+            z: 0,
+            opacity: 1,
+            duration: 0.6,
+            ease: "power2.out",
+            overwrite: "auto"
+          });
+        } else if (i < targetState) {
+          gsap.to(el, {
+            rotationX: -70,
+            y: -100,
+            z: -80,
+            opacity: 0,
+            duration: 0.6,
+            ease: "power2.out",
+            overwrite: "auto"
+          });
+        } else {
+          gsap.to(el, {
+            rotationX: 70,
+            y: 100,
+            z: -80,
+            opacity: 0,
+            duration: 0.6,
+            ease: "power2.out",
+            overwrite: "auto"
+          });
+        }
+      });
+    };
+
+    // Dynamic state transition player to handle lag-free zoom snaps on desktop
     const transitionToState = (targetState: number) => {
       if (currentStateRef.current === targetState) return;
       currentStateRef.current = targetState;
@@ -411,45 +477,7 @@ export const Hero: React.FC = () => {
         });
       }
 
-      // Snappy 3D dice roll transition for all overlay texts (0.6s)
-      const elements = [entrance, stage1, stage2, stage3];
-      elements.forEach((el, i) => {
-        if (!el) return;
-        if (i === targetState) {
-          // Roll IN and become active
-          gsap.to(el, {
-            rotationX: 0,
-            y: 0,
-            z: 0,
-            opacity: 1,
-            duration: 0.6,
-            ease: "power2.out",
-            overwrite: "auto"
-          });
-        } else if (i < targetState) {
-          // Outgoing or inactive above active: roll UP and out
-          gsap.to(el, {
-            rotationX: -70,
-            y: -100,
-            z: -80,
-            opacity: 0,
-            duration: 0.6,
-            ease: "power2.out",
-            overwrite: "auto"
-          });
-        } else {
-          // Inactive below active: roll DOWN and out (waiting state)
-          gsap.to(el, {
-            rotationX: 70,
-            y: 100,
-            z: -80,
-            opacity: 0,
-            duration: 0.6,
-            ease: "power2.out",
-            overwrite: "auto"
-          });
-        }
-      });
+      animateTexts(targetState);
     };
 
     // ScrollTrigger to detect which scroll sector the user is in (snapping state trigger)
@@ -480,14 +508,46 @@ export const Hero: React.FC = () => {
           progressBarRef.current.style.width = `${progressPercent}%`;
         }
 
-        transitionToState(targetState);
+        if (isMobile) {
+          // Direct scrub frame on mobile
+          const targetFrame = Math.round(progress * (totalFrames - 1));
+          drawFrame(targetFrame);
+
+          // Crossfade WebP and canvas
+          gsap.to(canvas, {
+            opacity: progress < 0.05 ? 0 : 1,
+            duration: 0.2,
+            overwrite: "auto"
+          });
+          if (webpRef.current) {
+            gsap.to(webpRef.current, {
+              opacity: progress < 0.05 && bgLoadedRef.current ? 0.4 : 0,
+              duration: 0.2,
+              overwrite: "auto"
+            });
+          }
+          if (fallbackRef.current) {
+            gsap.to(fallbackRef.current, {
+              opacity: progress < 0.05 && !bgLoadedRef.current ? 0.4 : 0,
+              duration: 0.2,
+              overwrite: "auto"
+            });
+          }
+
+          if (currentStateRef.current !== targetState) {
+            currentStateRef.current = targetState;
+            animateTexts(targetState);
+          }
+        } else {
+          transitionToState(targetState);
+        }
       }
     });
 
     return () => {
       st.kill();
     };
-  }, []);
+  }, [hasMounted, isMobile]);
 
   const scrollToNext = () => {
     if (containerRef.current) {
@@ -563,31 +623,29 @@ export const Hero: React.FC = () => {
 
       <div
         ref={containerRef}
-        className="relative h-[100dvh] md:h-[350vh] bg-dark-bg"
+        className="relative h-[350vh] bg-dark-bg"
       >
-      {/* Sticky Viewport Container */}
+      {/* Sticky Viewport Container with stacking context */}
       <div 
-        className="relative md:sticky top-0 h-[100dvh] md:h-screen w-full flex flex-col justify-between items-center overflow-hidden z-0"
+        className="sticky top-0 h-screen w-full flex flex-col justify-between items-center overflow-hidden z-0"
         style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
       >
         
         {/* Layer 2 (Beneath): Zoom Scrubber Canvas */}
-        {!isMobile && (
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-            style={{ opacity: 0, zIndex: -20 }}
-          />
-        )}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          style={{ opacity: 0, zIndex: 2 }}
+        />
 
-        {/* Layer 1 (On top): Looping WebP faded background image (outside entranceRef to prevent rotation) */}
+        {/* Layer 1 (On top): Looping WebP faded background image */}
         <img
           ref={webpRef}
-          src={hasMounted && !isMobile ? "/asset/GROC_landing_section.webp" : undefined}
+          src={hasMounted ? "/asset/GROC_landing_section.webp" : undefined}
           alt="GROC Animated Hero Background"
           onLoad={() => setBgLoaded(true)}
-          className="hidden md:block absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ease-out"
-          style={{ opacity: bgLoaded && currentStateRef.current === 0 ? 0.4 : 0, zIndex: -10 }}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ease-out"
+          style={{ opacity: bgLoaded && currentStateRef.current === 0 ? 0.4 : 0, zIndex: 3 }}
         />
 
         {/* Lightweight static fallback image rendered immediately under the WebP image to prevent black screen on load */}
@@ -596,16 +654,19 @@ export const Hero: React.FC = () => {
           src={`/asset/hero_zoom/${ZOOM_FRAMES[0]}`}
           alt="GROC Hero Fallback Background"
           className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ease-out"
-          style={{ opacity: bgLoaded && !isMobile ? 0 : 0.4, zIndex: -30 }}
+          style={{ opacity: bgLoaded ? 0 : 0.4, zIndex: 1 }}
         />
 
         {/* Ambient light pulse */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85vw] h-[45vw] max-w-[900px] bg-brand-green/5 rounded-full blur-[140px] pointer-events-none -z-10 animate-pulse-slow" />
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85vw] h-[45vw] max-w-[900px] bg-brand-green/5 rounded-full blur-[140px] pointer-events-none animate-pulse-slow" 
+          style={{ zIndex: 4 }}
+        />
 
         {/* Unified Entrance Fade Wrapper (for load entrance fade of landing elements) */}
         <div
           ref={entranceRef}
-          className="absolute inset-0 w-full h-full flex flex-col justify-between items-center pointer-events-none"
+          className="absolute inset-0 w-full h-full flex flex-col justify-between items-center pointer-events-none z-10"
           style={{ 
             opacity: 0,
             transformStyle: "preserve-3d",
@@ -713,7 +774,7 @@ export const Hero: React.FC = () => {
         </div>
 
         {/* Dynamic Scrubbing indicators */}
-        <div className="hidden md:flex absolute bottom-8 left-6 right-6 justify-between items-end z-10 select-none pointer-events-none">
+        <div className="absolute bottom-8 left-6 right-6 flex justify-between items-end z-20 select-none pointer-events-none">
           <div className="flex flex-col gap-1 font-mono text-[10px]">
             <span ref={progressTextRef} className="text-zinc-500 uppercase tracking-widest">
               Portal Zoom 0%
